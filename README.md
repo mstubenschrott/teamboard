@@ -1,5 +1,7 @@
 # TeamBoard — Ticket Management System
 
+[![CI](https://github.com/mstubenschrott/teamboard/actions/workflows/ci.yml/badge.svg)](https://github.com/mstubenschrott/teamboard/actions/workflows/ci.yml)
+
 ## Overview
 
 TeamBoard is a lightweight ticket management system for small teams. It allows users to create, manage, and track work items (tickets) through a simple workflow.
@@ -54,7 +56,7 @@ Each ticket contains the following fields:
 
 ```
 teamboard/
-├── README-draft.md
+├── README.md
 ├── backend/
 │   ├── server.js          # Express server & API routes
 │   ├── ticketStore.js     # In-memory ticket storage logic
