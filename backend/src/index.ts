@@ -38,3 +38,7 @@ ticketService.moveToNextStatus(firstId)
 console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
 ticketService.moveToNextStatus(firstId)
 console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+
+// Remove an item
+ticketService.deleteTicket(firstId)
+console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))

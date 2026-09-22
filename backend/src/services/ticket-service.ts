@@ -26,4 +26,8 @@ export class TicketService {
 
 		return t
 	}
+
+	deleteTicket(id: string): boolean {
+		return this.repository.remove(id)
+	}
 }

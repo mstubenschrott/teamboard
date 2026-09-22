@@ -14,4 +14,8 @@ export class Repository<T extends { "id": string }> {
 	findById(id: string): T | undefined {
 		return this.elements.get(id);
 	}
+
+	remove(id: string): boolean {
+		return this.elements.delete(id);
+	}
 }
