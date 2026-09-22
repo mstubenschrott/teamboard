@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "The backend service for the TeamBoard",
   "main": "index.ts",
+  "type": "module",
   "scripts": {
     "start": "node src/index.ts",
     "build": "tsc",
