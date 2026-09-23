@@ -31,7 +31,7 @@ app.get("/tickets/:id", (req, res) => {
 
 
 app.patch("/tickets/:id/assign", (req, res) => {
-	const t = ticketService.assign(req.params.id, req.body.assignee)
+	const t = ticketService.assign(req.params.id, req.body?.assignee)
 	if (!t)
 		return res.status(400).json({ success: false, error: "Could not update ticket" })
 
@@ -43,7 +43,7 @@ app.patch("/tickets/:id/status", (req, res) => {
 	if (!t)
 		return res.status(404).json({ success: false, error: "Could not update ticket" })
 
-	t = ticketService.setStatus(req.params.id, req.body.status)
+	t = ticketService.setStatus(req.params.id, req.body?.status)
 	if (!t)
 		return res.status(400).json({ success: false, error: "Could not update ticket" })
 
@@ -52,7 +52,7 @@ app.patch("/tickets/:id/status", (req, res) => {
 
 app.post("/tickets", (req, res) => {
 	const { title, description, assignee, status } = req.body
-	if (!title || !assignee || !status)
+	if (!title || !status)
 		return res.status(400).json({ success: false, error: "One of the required fields 'title', 'assignee' or 'status' is missing" })
 
 	const newTicket: Ticket = { id: crypto.randomUUID(), title, description, assignee, status }
