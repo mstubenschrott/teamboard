@@ -11,7 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "ticket-system"
+    "ticket-system",
+    "training-project"
   ],
   "author": "Martin Stubenschrott",
   "license": "MIT",
