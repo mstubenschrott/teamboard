@@ -6,10 +6,17 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017/teamboard
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
   mongo:
     image: mongo:8
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping').ok", "--quiet" ]
+      interval: 1m0s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     volumes:
       - mongo-data:/data/db
 
