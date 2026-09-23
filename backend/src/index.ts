@@ -17,11 +17,11 @@ const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
 
-app.get("/items", (req, res) => {
+app.get("/tickets", (req, res) => {
 	res.status(200).json(ticketRepository.getAll());
 });
 
-app.get("/items/:id", (req, res) => {
+app.get("/tickets/:id", (req, res) => {
 	const t = ticketRepository.findById(req.params.id)
 	if (!t)
 		return res.status(404).json({ success: false, error: "Ticket does not exist" })
@@ -30,7 +30,7 @@ app.get("/items/:id", (req, res) => {
 });
 
 
-app.patch("/items/:id/assign", (req, res) => {
+app.patch("/tickets/:id/assign", (req, res) => {
 	const t = ticketService.assign(req.params.id, req.body.assignee)
 	if (!t)
 		return res.status(400).json({ success: false, error: "Could not update ticket" })
@@ -38,7 +38,7 @@ app.patch("/items/:id/assign", (req, res) => {
 	res.status(200).json(t)
 });
 
-app.patch("/items/:id/status", (req, res) => {
+app.patch("/tickets/:id/status", (req, res) => {
 	let t = ticketRepository.findById(req.params.id)
 	if (!t)
 		return res.status(404).json({ success: false, error: "Could not update ticket" })
@@ -50,7 +50,7 @@ app.patch("/items/:id/status", (req, res) => {
 	res.status(200).json(t)
 });
 
-app.post("/items", (req, res) => {
+app.post("/tickets", (req, res) => {
 	const { title, description, assignee, status } = req.body
 	if (!title || !assignee || !status)
 		return res.status(400).json({ success: false, error: "One of the required fields 'title', 'assignee' or 'status' is missing" })
