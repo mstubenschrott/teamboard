@@ -42,3 +42,5 @@ console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
 // Remove an item
 ticketService.deleteTicket(firstId)
 console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+
+console.log("Server exited")
