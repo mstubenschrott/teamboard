@@ -1,46 +1,95 @@
-import { sampleTickets, countByStatus } from "./data/sample-tickets.ts"
-import type { Ticket } from "./models/ticket.ts"
-import { Notification, EmailNotification } from "./notifications.ts"
-import { TicketRepository } from "./ticket-repository.ts"
-import { TicketService } from "./services/ticket-service.ts"
-import { Repository } from "./repository.ts"
+import express from "express";
+import { sampleTickets } from "./data/sample-tickets.ts";
+import type { Ticket } from "./models/ticket.ts";
+import { TicketService } from "./services/ticket-service.ts";
+import { TicketRepository } from "./ticket-repository.ts";
 
 
 console.log("TeamBoard backend starting...")
 
-console.log(countByStatus(sampleTickets))
-
-const notification = new Notification("New user created")
-console.log(notification.send())
-
-const emailNotification = new EmailNotification("New ticket created", "user@example.com")
-console.log(emailNotification.send())
-
-
 const ticketRepository = new TicketRepository()
-ticketRepository.add(sampleTickets[0] as Ticket)
-ticketRepository.add(sampleTickets[1] as Ticket)
-//ticketRepository.tickets; // Accessing the internal tickets map directly doesn't work
-console.log("Exists: " + JSON.stringify(ticketRepository.findById((sampleTickets[0] as Ticket).id)))
-console.log("Does not exist: " + JSON.stringify(ticketRepository.findById("non-existent-id")))
+for (const t of sampleTickets) ticketRepository.add(t)
 
-// Add another repository
-const labelRepository = new Repository<{ "id": string, "label": string }>()
-labelRepository.add({ id: "1", label: "First item" })
-labelRepository.add({ id: "2", label: "Second item" })
-
-
-// Add ticket service
 const ticketService = new TicketService(ticketRepository)
-const firstId = ((sampleTickets[0] as Ticket).id)
-console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
-ticketService.moveToNextStatus(firstId)
-console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
-ticketService.moveToNextStatus(firstId)
-console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
 
-// Remove an item
-ticketService.deleteTicket(firstId)
-console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+const app = express();
+const port = process.env.PORT ?? 3000;
 
-console.log("Server exited successfully")
+app.use(express.json());
+
+app.get("/items", (req, res) => {
+	res.status(200).json(ticketRepository.getAll());
+});
+
+app.get("/items/:id", (req, res) => {
+	const t = ticketRepository.findById(req.params.id)
+	if (!t)
+		return res.status(404).json({ success: false, error: "Ticket does not exist" })
+
+	res.status(200).json(t)
+});
+
+
+app.patch("/items/:id/assign", (req, res) => {
+	const t = ticketService.assign(req.params.id, req.body.assignee)
+	if (!t)
+		return res.status(400).json({ success: false, error: "Could not update ticket" })
+
+	res.status(200).json(t)
+});
+
+app.patch("/items/:id/status", (req, res) => {
+	let t = ticketRepository.findById(req.params.id)
+	if (!t)
+		return res.status(404).json({ success: false, error: "Could not update ticket" })
+
+	t = ticketService.setStatus(req.params.id, req.body.status)
+	if (!t)
+		return res.status(400).json({ success: false, error: "Could not update ticket" })
+
+	res.status(200).json(t)
+});
+
+app.post("/items", (req, res) => {
+	const { title, description, assignee, status } = req.body
+	if (!title || !assignee || !status)
+		return res.status(400).json({ success: false, error: "One of the required fields 'title', 'assignee' or 'status' is missing" })
+
+	const newTicket: Ticket = { id: crypto.randomUUID(), title, description, assignee, status }
+	ticketRepository.add(newTicket)
+	res.status(201).json({ success: true })
+});
+
+app.listen(port, () => {
+	console.log(`Server listening on port ${port}`);
+});
+// 
+// 
+// console.log(countByStatus(sampleTickets))
+// 
+// const notification = new Notification("New user created")
+// console.log(notification.send())
+// 
+// const emailNotification = new EmailNotification("New ticket created", "user@example.com")
+// console.log(emailNotification.send())
+// 
+// 
+// ticketRepository.add(sampleTickets[0] as Ticket)
+// ticketRepository.add(sampleTickets[1] as Ticket)
+// //ticketRepository.tickets; // Accessing the internal tickets map directly doesn't work
+// console.log("Exists: " + JSON.stringify(ticketRepository.findById((sampleTickets[0] as Ticket).id)))
+// console.log("Does not exist: " + JSON.stringify(ticketRepository.findById("non-existent-id")))
+// 
+// // Add ticket service
+// const firstId = ((sampleTickets[0] as Ticket).id)
+// console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+// ticketService.moveToNextStatus(firstId)
+// console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+// ticketService.moveToNextStatus(firstId)
+// console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+// 
+// // Remove an item
+// ticketService.deleteTicket(firstId)
+// console.log("State: " + JSON.stringify(ticketRepository.findById(firstId)))
+// 
+// console.log("Server exited successfully")

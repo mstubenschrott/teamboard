@@ -6,8 +6,6 @@ export class Repository<T extends { "id": string }> {
 	}
 
 	add(element: T): void {
-		// Add the ticket to the repository, overwriting an existing ticket with the same ID if it exists
-		// Change, if it should throw an exception instead of overwriting an existing ticket
 		this.elements.set(element.id, element);
 	}
 
@@ -17,5 +15,9 @@ export class Repository<T extends { "id": string }> {
 
 	remove(id: string): boolean {
 		return this.elements.delete(id);
+	}
+
+	getAll(): T[] {
+		return Array.from(this.elements.values())
 	}
 }

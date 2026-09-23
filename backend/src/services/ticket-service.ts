@@ -30,4 +30,24 @@ export class TicketService {
 	deleteTicket(id: string): boolean {
 		return this.repository.remove(id)
 	}
+
+	assign(id: string, assignee: string): Ticket | undefined {
+		const t = this.repository.findById(id)
+		if (t)
+			t.assignee = assignee
+		return t
+	}
+
+	setStatus(id: string, status: string): Ticket | undefined {
+		const t = this.repository.findById(id)
+		if (!t)
+			return undefined
+
+		if ((["To Do", "In Progress", "Done"].indexOf(status) < 0))
+			return undefined
+
+		t.status = status as "To Do" | "In Progress" | "Done"
+
+		return t
+	}
 }
