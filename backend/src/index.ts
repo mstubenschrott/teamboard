@@ -30,20 +30,17 @@ app.get("/tickets/:id", (req, res) => {
 });
 
 
-app.patch("/tickets/:id/assign", (req, res) => {
-	const t = ticketService.assign(req.params.id, req.body?.assignee)
-	if (!t)
-		return res.status(400).json({ success: false, error: "Could not update ticket" })
+app.patch("/tickets/:id", (req, res) => {
+	if (!ticketRepository.findById(req.params.id))
+		return res.status(404).json({ success: false, error: "Ticket does not exist" })
 
-	res.status(200).json(t)
-});
+	let t;
+	try {
+		t = ticketRepository.update(req.params.id, req.body ?? {})
+	} catch (err) {
+		return res.status(400).json({ success: false, error: err instanceof Error ? err.message : "Could not update ticket" })
+	}
 
-app.patch("/tickets/:id/status", (req, res) => {
-	let t = ticketRepository.findById(req.params.id)
-	if (!t)
-		return res.status(404).json({ success: false, error: "Could not update ticket" })
-
-	t = ticketService.setStatus(req.params.id, req.body?.status)
 	if (!t)
 		return res.status(400).json({ success: false, error: "Could not update ticket" })
 
@@ -57,7 +54,14 @@ app.post("/tickets", (req, res) => {
 
 	const newTicket: Ticket = { id: crypto.randomUUID(), title, description, assignee, status }
 	ticketRepository.add(newTicket)
-	res.status(201).json({ success: true })
+	res.status(201).json({ success: true, url: `${req.originalUrl}/${newTicket.id}` })
+});
+
+app.delete("/tickets/:id", (req, res) => {
+	if (ticketService.deleteTicket(req.params.id))
+		res.status(204).json({})
+	else
+		res.status(404).json({ success: false, error: "Ticket " + req.params.id + " existiert nicht" })
 });
 
 app.listen(port, () => {

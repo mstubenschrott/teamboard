@@ -1,4 +1,19 @@
 import { type Ticket } from "./models/ticket.ts"
 import { Repository } from "./repository.ts"
 
-export class TicketRepository<T extends Ticket> extends Repository<T> { }
+const VALID_STATUSES: Ticket["status"][] = ["To Do", "In Progress", "Done"]
+
+export class TicketRepository<T extends Ticket> extends Repository<T> {
+	update(id: string, changes: Partial<T>): T | undefined {
+		if ("title" in changes && (changes.title === undefined || changes.title.trim() === ""))
+			throw new Error("Field 'title' is required and cannot be empty")
+
+		if ("assignee" in changes && changes.assignee === undefined)
+			throw new Error("Field 'assignee' is required and cannot be removed")
+
+		if ("status" in changes && !VALID_STATUSES.includes(changes.status as Ticket["status"]))
+			throw new Error(`Field 'status' must be one of: ${VALID_STATUSES.join(", ")}`)
+
+		return super.update(id, changes)
+	}
+}
