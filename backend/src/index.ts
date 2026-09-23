@@ -11,7 +11,7 @@ const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
 
-app.use(createTicketRoutes());
+app.use("/tickets", createTicketRoutes());
 
 app.get("/users", (req, res) => {
 	throw Error("Users not supported yet")

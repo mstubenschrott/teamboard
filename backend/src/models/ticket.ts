@@ -1,7 +1,4 @@
-export interface Ticket {
-	id: string;
-	title: string;
-	description?: string;
-	assignee: string;
-	status: "To Do" | "In Progress" | "Done";
-}
+import type { z } from "zod"
+import type { ticketSchema } from "../validation/ticket-validation.ts"
+
+export type Ticket = z.infer<typeof ticketSchema>

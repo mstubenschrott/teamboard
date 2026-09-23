@@ -1,3 +1,5 @@
+import type { ZodError } from "zod"
+
 export class HttpError extends Error {
 	status: number
 	details: unknown
@@ -8,4 +10,8 @@ export class HttpError extends Error {
 		this.status = status
 		this.details = details
 	}
+}
+
+export function schemaError(error: ZodError): HttpError {
+	return new HttpError(422, "Wrong schema for endpoint", error.issues.map(i => i.message))
 }
