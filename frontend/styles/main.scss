@@ -1,0 +1,56 @@
+$todo-color: #ffc107;
+$in-progress-color: #e9ecef;
+$done-color: #198754;
+$ticket-radius: 0.5rem;
+
+.column {
+	height: 100%;
+	padding: 1rem;
+	border-radius: $ticket-radius;
+
+	h2 {
+		margin-bottom: 1rem;
+		font-size: 0.875rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	&.todo {
+		background-color: $todo-color;
+	}
+
+	&.in-progress {
+		background-color: $in-progress-color;
+	}
+
+	&.done {
+		background-color: $done-color;
+
+		h2 {
+			color: #fff;
+		}
+	}
+}
+
+.ticket {
+	margin-bottom: 0.5rem;
+	border: 0;
+	border-radius: $ticket-radius;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+	&:hover {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	.card-body {
+		padding: 0.75rem;
+	}
+
+	.card-text {
+		margin-bottom: 0.25rem;
+	}
+
+	.assignee {
+		color: #6c757d;
+	}
+}

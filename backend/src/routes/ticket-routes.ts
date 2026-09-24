@@ -52,6 +52,14 @@ export async function createTicketRoutes(ticketsCollection: Collection<Ticket>):
 		res.status(200).json(t)
 	});
 
+	router.patch("/:id/status", async (req, res) => {
+		const t = await ticketService.moveToNextStatus(req.params.id)
+		if (!t)
+			throw new HttpError(404, "Ticket does not exist")
+
+		res.status(200).json(t)
+	});
+
 	router.post("/", async (req, res) => {
 		const result = createTicketSchema.safeParse(req.body ?? {})
 		if (!result.success)
