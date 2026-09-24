@@ -8,46 +8,38 @@ export class TicketService {
 		this.repository = repository;
 	}
 
-	moveToNextStatus(id: string): Ticket | undefined {
-		const t = this.repository.findById(id)
+	async moveToNextStatus(id: string): Promise<Ticket | undefined> {
+		const t = await this.repository.findById(id)
 		if (!t)
 			return undefined
 
+		let status = t.status
 		switch (t.status) {
 			case "To Do":
-				t.status = "In Progress"
+				status = "In Progress"
 				break;
 			case "In Progress":
-				t.status = "Done";
+				status = "Done";
 				break;
 			default:
 			// Keep the current state
 		}
 
-		return t
+		return this.repository.update(id, { status })
 	}
 
-	deleteTicket(id: string): boolean {
+	async deleteTicket(id: string): Promise<boolean> {
 		return this.repository.remove(id)
 	}
 
-	assign(id: string, assignee: string): Ticket | undefined {
-		const t = this.repository.findById(id)
-		if (t)
-			t.assignee = assignee
-		return t
+	async assign(id: string, assignee: string): Promise<Ticket | undefined> {
+		return this.repository.update(id, { assignee })
 	}
 
-	setStatus(id: string, status: string): Ticket | undefined {
-		const t = this.repository.findById(id)
-		if (!t)
-			return undefined
-
+	async setStatus(id: string, status: string): Promise<Ticket | undefined> {
 		if ((["To Do", "In Progress", "Done"].indexOf(status) < 0))
 			return undefined
 
-		t.status = status as "To Do" | "In Progress" | "Done"
-
-		return t
+		return this.repository.update(id, { status: status as Ticket["status"] })
 	}
 }

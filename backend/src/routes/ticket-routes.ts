@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { Collection } from "mongodb";
 import { HttpError, schemaError } from "../http-error.ts";
 import type { Ticket } from "../models/ticket.ts";
 import { TicketService } from "../services/ticket-service.ts";
@@ -6,46 +7,48 @@ import { TicketRepository } from "../ticket-repository.ts";
 import { sampleTickets } from "../data/sample-tickets.ts";
 import { createTicketSchema, updateTicketSchema } from "../validation/ticket-validation.ts";
 
-const ticketRepository = new TicketRepository()
-for (const t of sampleTickets) ticketRepository.add(t)
-
-const ticketService = new TicketService(ticketRepository)
-
 function withoutUndefined<T extends object>(obj: T): { [K in keyof T]?: Exclude<T[K], undefined> } {
 	return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as { [K in keyof T]?: Exclude<T[K], undefined> }
 }
 
-export function createTicketRoutes(): Router {
+export async function createTicketRoutes(ticketsCollection: Collection<Ticket>): Promise<Router> {
+	const ticketRepository = new TicketRepository(ticketsCollection)
+
+	if ((await ticketRepository.getAll()).length === 0)
+		for (const t of sampleTickets) await ticketRepository.add(t)
+
+	const ticketService = new TicketService(ticketRepository)
+
 	const router = Router();
 
-	router.get("/", (req, res) => {
-		res.status(200).json(ticketRepository.getAll());
+	router.get("/", async (req, res) => {
+		res.status(200).json(await ticketRepository.getAll());
 	});
 
-	router.get("/:id", (req, res) => {
-		const t = ticketRepository.findById(req.params.id)
+	router.get("/:id", async (req, res) => {
+		const t = await ticketRepository.findById(req.params.id)
 		if (!t)
 			throw new HttpError(404, "Ticket does not exist")
 
 		res.status(200).json(t)
 	});
 
-	router.patch("/:id", (req, res) => {
-		if (!ticketRepository.findById(req.params.id))
+	router.patch("/:id", async (req, res) => {
+		if (!(await ticketRepository.findById(req.params.id)))
 			throw new HttpError(404, "Ticket does not exist")
 
 		const result = updateTicketSchema.safeParse(req.body ?? {})
 		if (!result.success)
 			throw schemaError(result.error)
 
-		const t = ticketRepository.update(req.params.id, withoutUndefined(result.data))
+		const t = await ticketRepository.update(req.params.id, withoutUndefined(result.data))
 		if (!t)
 			throw new HttpError(400, "Could not update ticket")
 
 		res.status(200).json(t)
 	});
 
-	router.post("/", (req, res) => {
+	router.post("/", async (req, res) => {
 		const result = createTicketSchema.safeParse(req.body ?? {})
 		if (!result.success)
 			throw schemaError(result.error)
@@ -58,12 +61,12 @@ export function createTicketRoutes(): Router {
 			status,
 			...(description !== undefined && { description }),
 		}
-		ticketRepository.add(newTicket)
+		await ticketRepository.add(newTicket)
 		res.status(201).json({ success: true, url: `${req.originalUrl}/${newTicket.id}` })
 	});
 
-	router.delete("/:id", (req, res) => {
-		if (ticketService.deleteTicket(req.params.id))
+	router.delete("/:id", async (req, res) => {
+		if (await ticketService.deleteTicket(req.params.id))
 			res.status(204).end()
 		else
 			throw new HttpError(404, "Ticket " + req.params.id + " existiert nicht")

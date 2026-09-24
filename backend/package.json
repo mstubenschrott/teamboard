@@ -17,7 +17,12 @@
   "author": "Martin Stubenschrott",
   "license": "MIT",
   "dependencies": {
+    "@apollo/server": "^5.5.1",
+    "@as-integrations/express5": "^1.1.2",
     "express": "^5.2.1",
+    "graphql": "^16.14.2",
+    "graphql-tag": "^2.12.7",
+    "mongodb": "^7.6.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
