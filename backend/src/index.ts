@@ -8,8 +8,10 @@ import { expressMiddleware } from "@as-integrations/express5"
 import { errorHandler } from "./error-handler.ts";
 import { HttpError } from "./http-error.ts";
 import { createTicketRoutes } from "./routes/ticket-routes.ts";
+import { createAuthRoutes } from "./routes/auth-routes.ts";
 import type { Ticket } from "./models/ticket.ts";
 import { createSchema } from "./graphql/schema.ts";
+import { requireAuth } from "./require-auth.ts";
 
 
 console.log("TeamBoard backend starting...")
@@ -26,11 +28,9 @@ const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
 
-app.use("/tickets", await createTicketRoutes(db.collection<Ticket>("tickets")));
+app.use(createAuthRoutes());
 
-app.get("/users", (req, res) => {
-	throw Error("Users not supported yet")
-});
+app.use("/tickets", requireAuth, await createTicketRoutes(db.collection<Ticket>("tickets")));
 
 const apolloServer = new ApolloServer({
 	...createSchema(db.collection<Ticket>("tickets")),
@@ -39,7 +39,7 @@ const apolloServer = new ApolloServer({
 
 await apolloServer.start()
 
-app.use("/graphql", express.json(), expressMiddleware(apolloServer));
+app.use("/graphql", requireAuth, express.json(), expressMiddleware(apolloServer));
 
 app.use((req, res) => {
 	throw new HttpError(404, `Route not found: ${req.method} ${req.originalUrl}`)

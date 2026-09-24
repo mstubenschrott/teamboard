@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express"
 import { HttpError } from "./http-error.ts"
+import { GraphQLError } from "graphql";
 
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction): void {
 	if (res.headersSent) {
@@ -9,6 +10,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
 
 	if (err instanceof HttpError) {
 		res.status(err.status).json({ success: false, error: err.message, details: err.details })
+		return
+	}
+
+	if (err instanceof GraphQLError) {
+		res.status(400).json({ success: false, error: err.message, details: err.cause })
 		return
 	}
 
