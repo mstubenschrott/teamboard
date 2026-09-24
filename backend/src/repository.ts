@@ -1,33 +1,38 @@
-import type { Collection, WithId } from "mongodb";
+import { ObjectId, type Collection, type WithId } from "mongodb";
 
-function withoutMongoId<T>(document: WithId<T>): T {
-	const { _id, ...rest } = document;
-	return rest as T;
-}
-
-export class Repository<T extends { "id": string }> {
+export class Repository<T extends object> {
 	private collection: Collection<T>;
 
 	constructor(collection: Collection<T>) {
 		this.collection = collection;
 	}
 
-	async add(element: T): Promise<void> {
-		await this.collection.insertOne(element as never);
+	async add(element: T): Promise<WithId<T>> {
+		const result = await this.collection.insertOne(element as never);
+		return { ...element, _id: result.insertedId } as WithId<T>;
 	}
 
-	async findById(id: string): Promise<T | undefined> {
-		const element = await this.collection.findOne({ id } as never);
-		return element ? withoutMongoId(element) : undefined;
+	async findById(id: string): Promise<WithId<T> | undefined> {
+		if (!ObjectId.isValid(id))
+			return undefined;
+
+		const element = await this.collection.findOne({ _id: new ObjectId(id) } as never);
+		return element ?? undefined;
 	}
 
 	async remove(id: string): Promise<boolean> {
-		const result = await this.collection.deleteOne({ id } as never);
+		if (!ObjectId.isValid(id))
+			return false;
+
+		const result = await this.collection.deleteOne({ _id: new ObjectId(id) } as never);
 		return result.deletedCount > 0;
 	}
 
-	async update(id: string, changes: Partial<T>): Promise<T | undefined> {
-		if ("id" in changes)
+	async update(id: string, changes: Partial<T>): Promise<WithId<T> | undefined> {
+		if (!ObjectId.isValid(id))
+			return undefined;
+
+		if ("_id" in changes)
 			throw Error("Cannot change ID")
 
 		const setFields: Partial<T> = {};
@@ -47,16 +52,15 @@ export class Repository<T extends { "id": string }> {
 			update.$unset = unsetFields;
 
 		const result = await this.collection.findOneAndUpdate(
-			{ id } as never,
+			{ _id: new ObjectId(id) } as never,
 			update,
 			{ returnDocument: "after" }
 		);
 
-		return result ? withoutMongoId(result) : undefined;
+		return result ?? undefined;
 	}
 
-	async getAll(): Promise<T[]> {
-		const elements = await this.collection.find({} as never).toArray();
-		return elements.map(withoutMongoId);
+	async getAll(): Promise<WithId<T>[]> {
+		return this.collection.find({} as never).toArray();
 	}
 }

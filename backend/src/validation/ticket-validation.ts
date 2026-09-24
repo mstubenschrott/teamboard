@@ -8,13 +8,12 @@ const status = z.enum(["To Do", "In Progress", "Done"], {
 })
 
 export const ticketSchema = z.object({
-	id: z.string(),
 	title,
 	description,
 	assignee,
 	status,
 })
 
-export const createTicketSchema = ticketSchema.omit({ id: true }).strict()
+export const createTicketSchema = ticketSchema.strict()
 
 export const updateTicketSchema = createTicketSchema.partial().strict()

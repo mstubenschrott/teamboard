@@ -1,42 +1,101 @@
-interface Book {
-	id: string
-	title: string
+import { GraphQLError } from "graphql";
+import type { Collection, WithId } from "mongodb";
+import type { Ticket } from "../models/ticket.ts";
+import { TicketRepository } from "../ticket-repository.ts";
+import { TicketService } from "../services/ticket-service.ts";
+import { createTicketSchema, updateTicketSchema } from "../validation/ticket-validation.ts";
+
+function withoutUndefined<T extends object>(obj: T): { [K in keyof T]?: Exclude<T[K], undefined> } {
+	return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as { [K in keyof T]?: Exclude<T[K], undefined> }
 }
 
-const books: Book[] = [
-	{ id: "1", title: "The Awakening" },
-	{ id: "2", title: "City of Glass" },
-]
-
 export const typeDefs = `#graphql
-	type Book {
+	enum TicketStatus {
+		TODO
+		IN_PROGRESS
+		DONE
+	}
+
+	type Ticket {
 		id: ID!
 		title: String!
+		description: String
+		assignee: String
+		status: TicketStatus!
 	}
 
 	type Query {
-		books: [Book!]
+		tickets: [Ticket!]!
+		ticket(id: ID!): Ticket
 	}
 
 	type Mutation {
-		addBook(title: String!): Book
+		addTicket(title: String!, description: String, assignee: String, status: TicketStatus!): Ticket!
+		updateTicket(id: ID!, title: String, description: String, assignee: String, status: TicketStatus): Ticket
+		deleteTicket(id: ID!): Boolean!
 	}
 `
 
-export const resolvers = {
-	Query: {
-		books: () => books,
-	},
-	Mutation: {
-		addBook: (_parent: unknown, args: { title: string }) => {
-			const book: Book = { id: String(books.length + 1), title: args.title }
-			books.push(book)
-			return book
+const STATUS_TO_GRAPHQL: Record<Ticket["status"], string> = {
+	"To Do": "TODO",
+	"In Progress": "IN_PROGRESS",
+	"Done": "DONE",
+}
+
+const STATUS_FROM_GRAPHQL: Record<string, Ticket["status"]> = {
+	TODO: "To Do",
+	IN_PROGRESS: "In Progress",
+	DONE: "Done",
+}
+
+function toGraphQLTicket(ticket: WithId<Ticket>) {
+	return { ...ticket, id: String(ticket._id), status: STATUS_TO_GRAPHQL[ticket.status] }
+}
+
+export function createSchema(ticketsCollection: Collection<Ticket>) {
+	const ticketRepository = new TicketRepository(ticketsCollection)
+	const ticketService = new TicketService(ticketRepository)
+
+	const resolvers = {
+		Query: {
+			tickets: async () => (await ticketRepository.getAll()).map(toGraphQLTicket),
+			ticket: async (_parent: unknown, args: { id: string }) => {
+				const t = await ticketRepository.findById(args.id)
+				return t ? toGraphQLTicket(t) : null
+			},
 		},
-		/*addDefaultBook: (_parent: unknown) => {
-			const book: Book = { id: String(books.length + 1), title: "bla" }
-			books.push(book)
-			return book
-		},*/
-	},
+		Mutation: {
+			addTicket: async (_parent: unknown, args: { title: string, description?: string, assignee?: string, status: string }) => {
+				const result = createTicketSchema.safeParse({
+					title: args.title,
+					...(args.description !== undefined && { description: args.description }),
+					...(args.assignee !== undefined && { assignee: args.assignee }),
+					status: STATUS_FROM_GRAPHQL[args.status],
+				})
+				if (!result.success)
+					throw new GraphQLError("Wrong schema for ticket", { extensions: { details: result.error.issues.map(i => i.message) } })
+
+				const created = await ticketRepository.add(result.data)
+				return toGraphQLTicket(created)
+			},
+			updateTicket: async (_parent: unknown, args: { id: string, title?: string, description?: string, assignee?: string, status?: string }) => {
+				const result = updateTicketSchema.safeParse({
+					...(args.title !== undefined && { title: args.title }),
+					...(args.description !== undefined && { description: args.description }),
+					...(args.assignee !== undefined && { assignee: args.assignee }),
+					...(args.status !== undefined && { status: STATUS_FROM_GRAPHQL[args.status] }),
+				})
+				if (!result.success)
+					throw new GraphQLError("Wrong schema for ticket", { extensions: { details: result.error.issues.map(i => i.message) } })
+
+				const t = await ticketRepository.update(args.id, withoutUndefined(result.data))
+				return t ? toGraphQLTicket(t) : null
+			},
+			deleteTicket: async (_parent: unknown, args: { id: string }) => {
+				return ticketService.deleteTicket(args.id)
+			},
+		},
+	}
+
+	return { typeDefs, resolvers }
 }

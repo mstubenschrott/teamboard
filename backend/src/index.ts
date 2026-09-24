@@ -9,7 +9,7 @@ import { errorHandler } from "./error-handler.ts";
 import { HttpError } from "./http-error.ts";
 import { createTicketRoutes } from "./routes/ticket-routes.ts";
 import type { Ticket } from "./models/ticket.ts";
-import { typeDefs, resolvers } from "./graphql/schema.ts";
+import { createSchema } from "./graphql/schema.ts";
 
 
 console.log("TeamBoard backend starting...")
@@ -33,8 +33,7 @@ app.get("/users", (req, res) => {
 });
 
 const apolloServer = new ApolloServer({
-	typeDefs,
-	resolvers,
+	...createSchema(db.collection<Ticket>("tickets")),
 	plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 })
 

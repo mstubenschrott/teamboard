@@ -55,14 +55,13 @@ export async function createTicketRoutes(ticketsCollection: Collection<Ticket>):
 
 		const { title, description, assignee, status } = result.data
 		const newTicket: Ticket = {
-			id: crypto.randomUUID(),
 			title,
 			...(assignee !== undefined && { assignee }),
 			status,
 			...(description !== undefined && { description }),
 		}
-		await ticketRepository.add(newTicket)
-		res.status(201).json({ success: true, url: `${req.originalUrl}/${newTicket.id}` })
+		const created = await ticketRepository.add(newTicket)
+		res.status(201).json({ success: true, url: `${req.originalUrl}/${created._id}` })
 	});
 
 	router.delete("/:id", async (req, res) => {

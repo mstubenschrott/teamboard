@@ -1,7 +1,6 @@
 import type { Ticket } from "../models/ticket.ts"
 
 const ticket1: Ticket = {
-	id: "1",
 	title: "Create frontend",
 	description: "Simple frontend for the TeamBoard",
 	assignee: "Ömer",
@@ -9,7 +8,6 @@ const ticket1: Ticket = {
 }
 
 const ticket2: Ticket = {
-	id: "2",
 	title: "Create backend",
 	description: "Simple backend for the TeamBoard",
 	assignee: "Martin",
@@ -17,7 +15,6 @@ const ticket2: Ticket = {
 }
 
 const ticket3: Ticket = {
-	id: "3",
 	title: "Create tests",
 	description: "Simple tests for the TeamBoard",
 	assignee: "Martin",
