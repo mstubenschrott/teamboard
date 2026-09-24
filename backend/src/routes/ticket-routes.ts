@@ -34,8 +34,12 @@ export async function createTicketRoutes(ticketsCollection: Collection<Ticket>):
 	});
 
 	router.patch("/:id", async (req, res) => {
-		if (!(await ticketRepository.findById(req.params.id)))
+		const existing = await ticketRepository.findById(req.params.id)
+		if (!existing)
 			throw new HttpError(404, "Ticket does not exist")
+
+		// if (existing.createdBy !== res.locals.user!.username)
+		// 	throw new HttpError(403, "Only the ticket creator can update this ticket")
 
 		const result = updateTicketSchema.safeParse(req.body ?? {})
 		if (!result.success)
@@ -59,16 +63,22 @@ export async function createTicketRoutes(ticketsCollection: Collection<Ticket>):
 			...(assignee !== undefined && { assignee }),
 			status,
 			...(description !== undefined && { description }),
+			createdBy: res.locals.user!.username,
 		}
 		const created = await ticketRepository.add(newTicket)
 		res.status(201).json({ success: true, url: `${req.originalUrl}/${created._id}` })
 	});
 
 	router.delete("/:id", async (req, res) => {
-		if (await ticketService.deleteTicket(req.params.id))
-			res.status(204).end()
-		else
+		const existing = await ticketRepository.findById(req.params.id)
+		if (!existing)
 			throw new HttpError(404, "Ticket " + req.params.id + " existiert nicht")
+
+		if (existing.createdBy !== res.locals.user!.username)
+			throw new HttpError(403, "Only the ticket creator can delete this ticket")
+
+		await ticketService.deleteTicket(req.params.id)
+		res.status(204).end()
 	});
 
 	return router;

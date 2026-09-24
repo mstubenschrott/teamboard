@@ -39,7 +39,9 @@ const apolloServer = new ApolloServer({
 
 await apolloServer.start()
 
-app.use("/graphql", requireAuth, express.json(), expressMiddleware(apolloServer));
+app.use("/graphql", requireAuth, expressMiddleware(apolloServer, {
+	context: async ({ res }) => ({ user: res.locals.user! }),
+}));
 
 app.use((req, res) => {
 	throw new HttpError(404, `Route not found: ${req.method} ${req.originalUrl}`)

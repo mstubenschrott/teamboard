@@ -4,21 +4,24 @@ const ticket1: Ticket = {
 	title: "Create frontend",
 	description: "Simple frontend for the TeamBoard",
 	assignee: "Ömer",
-	status: "In Progress"
+	status: "In Progress",
+	createdBy: "Ömer"
 }
 
 const ticket2: Ticket = {
 	title: "Create backend",
 	description: "Simple backend for the TeamBoard",
 	assignee: "Martin",
-	status: "To Do"
+	status: "To Do",
+	createdBy: "Martin"
 }
 
 const ticket3: Ticket = {
 	title: "Create tests",
 	description: "Simple tests for the TeamBoard",
 	assignee: "Martin",
-	status: "To Do"
+	status: "To Do",
+	createdBy: "Martin"
 }
 
 export const sampleTickets = [ticket1, ticket2, ticket3]

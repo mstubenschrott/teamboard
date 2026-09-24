@@ -6,14 +6,16 @@ const assignee = z.string().trim().min(1, "Field 'assignee' if given cannot be e
 const status = z.enum(["To Do", "In Progress", "Done"], {
 	message: "Field 'status' must be one of: To Do, In Progress, Done",
 })
+const createdBy = z.string().trim().min(1, "Field 'createdBy' is required and cannot be empty")
 
 export const ticketSchema = z.object({
 	title,
 	description,
 	assignee,
 	status,
+	createdBy,
 })
 
-export const createTicketSchema = ticketSchema.strict()
+export const createTicketSchema = ticketSchema.omit({ createdBy: true }).strict()
 
 export const updateTicketSchema = createTicketSchema.partial().strict()

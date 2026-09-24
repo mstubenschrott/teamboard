@@ -46,8 +46,8 @@ export function createAuthRoutes(): Router {
 		res.status(201).json({ success: true, token })
 	});
 
-	router.get("/profile", requireAuth, (req, res) => {
-		res.status(200).json({ success: true, username: req.user!.username })
+	router.get("/profile", requireAuth, (_req, res) => {
+		res.status(200).json({ success: true, username: res.locals.user!.username })
 	});
 
 	return router;

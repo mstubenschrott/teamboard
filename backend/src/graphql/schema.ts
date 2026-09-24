@@ -52,6 +52,10 @@ function toGraphQLTicket(ticket: WithId<Ticket>) {
 	return { ...ticket, id: String(ticket._id), status: STATUS_TO_GRAPHQL[ticket.status] }
 }
 
+export interface GraphQLContext {
+	user: { username: string }
+}
+
 export function createSchema(ticketsCollection: Collection<Ticket>) {
 	const ticketRepository = new TicketRepository(ticketsCollection)
 	const ticketService = new TicketService(ticketRepository)
@@ -65,7 +69,7 @@ export function createSchema(ticketsCollection: Collection<Ticket>) {
 			},
 		},
 		Mutation: {
-			addTicket: async (_parent: unknown, args: { title: string, description?: string, assignee?: string, status: string }) => {
+			addTicket: async (_parent: unknown, args: { title: string, description?: string, assignee?: string, status: string }, context: GraphQLContext) => {
 				const result = createTicketSchema.safeParse({
 					title: args.title,
 					...(args.description !== undefined && { description: args.description }),
@@ -75,10 +79,17 @@ export function createSchema(ticketsCollection: Collection<Ticket>) {
 				if (!result.success)
 					throw new GraphQLError("Wrong schema for ticket", { extensions: { details: result.error.issues.map(i => i.message) } })
 
-				const created = await ticketRepository.add(result.data)
+				const created = await ticketRepository.add({ ...result.data, createdBy: context.user.username })
 				return toGraphQLTicket(created)
 			},
-			updateTicket: async (_parent: unknown, args: { id: string, title?: string, description?: string, assignee?: string, status?: string }) => {
+			updateTicket: async (_parent: unknown, args: { id: string, title?: string, description?: string, assignee?: string, status?: string }, context: GraphQLContext) => {
+				const existing = await ticketRepository.findById(args.id)
+				if (!existing)
+					return null
+
+				if (existing.createdBy !== context.user.username)
+					throw new GraphQLError("Only the ticket creator can update this ticket", { extensions: { status: 403, code: "FORBIDDEN" } })
+
 				const result = updateTicketSchema.safeParse({
 					...(args.title !== undefined && { title: args.title }),
 					...(args.description !== undefined && { description: args.description }),
@@ -91,7 +102,14 @@ export function createSchema(ticketsCollection: Collection<Ticket>) {
 				const t = await ticketRepository.update(args.id, withoutUndefined(result.data))
 				return t ? toGraphQLTicket(t) : null
 			},
-			deleteTicket: async (_parent: unknown, args: { id: string }) => {
+			deleteTicket: async (_parent: unknown, args: { id: string }, context: GraphQLContext) => {
+				const existing = await ticketRepository.findById(args.id)
+				if (!existing)
+					return false
+
+				if (existing.createdBy !== context.user.username)
+					throw new GraphQLError("Only the ticket creator can delete this ticket", { extensions: { status: 403, code: "FORBIDDEN" } })
+
 				return ticketService.deleteTicket(args.id)
 			},
 		},

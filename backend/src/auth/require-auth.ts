@@ -6,7 +6,7 @@ const jwtSecret = process.env.JWT_SECRET ?? "dev-secret";
 
 declare global {
 	namespace Express {
-		interface Request {
+		interface Locals {
 			user?: { username: string }
 		}
 	}
@@ -23,7 +23,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 		if (typeof payload === "string" || typeof payload.sub !== "string")
 			throw new HttpError(401, "Invalid token")
 
-		req.user = { username: payload.sub }
+		res.locals.user = { username: payload.sub }
 		next()
 	} catch (err) {
 		if (err instanceof HttpError) throw err
