@@ -8,10 +8,10 @@ import { expressMiddleware } from "@as-integrations/express5"
 import { errorHandler } from "./error-handler.ts";
 import { HttpError } from "./http-error.ts";
 import { createTicketRoutes } from "./routes/ticket-routes.ts";
-import { createAuthRoutes } from "./routes/auth-routes.ts";
+import { createAuthRoutes } from "./auth/auth-routes.ts";
 import type { Ticket } from "./models/ticket.ts";
 import { createSchema } from "./graphql/schema.ts";
-import { requireAuth } from "./require-auth.ts";
+import { requireAuth } from "./auth/require-auth.ts";
 
 
 console.log("TeamBoard backend starting...")
@@ -28,7 +28,7 @@ const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
 
-app.use(createAuthRoutes());
+app.use("/auth", createAuthRoutes());
 
 app.use("/tickets", requireAuth, await createTicketRoutes(db.collection<Ticket>("tickets")));
 

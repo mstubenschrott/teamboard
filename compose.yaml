@@ -5,6 +5,7 @@ services:
       - 3000:3000
     environment:
       - MONGO_URL=mongodb://mongo:27017/teamboard
+      - JWT_SECRET=my-cool-secret-please-do-not-share-its-so-great
     depends_on:
       mongo:
         condition: service_healthy

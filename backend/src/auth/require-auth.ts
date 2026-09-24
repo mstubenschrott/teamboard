@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { HttpError } from "./http-error.ts";
+import { HttpError } from "../http-error.ts";
 
 const jwtSecret = process.env.JWT_SECRET ?? "dev-secret";
 
