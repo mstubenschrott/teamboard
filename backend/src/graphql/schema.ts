@@ -88,7 +88,7 @@ export function createSchema(ticketsCollection: Collection<Ticket>) {
 					return null
 
 				if (existing.createdBy !== context.user.username)
-					throw new GraphQLError("Only the ticket creator can update this ticket", { extensions: { status: 403, code: "FORBIDDEN" } })
+					throw new GraphQLError("Only the ticket creator can update this ticket", { extensions: { http: { status: 403 }, code: "FORBIDDEN" } })
 
 				const result = updateTicketSchema.safeParse({
 					...(args.title !== undefined && { title: args.title }),
@@ -108,7 +108,7 @@ export function createSchema(ticketsCollection: Collection<Ticket>) {
 					return false
 
 				if (existing.createdBy !== context.user.username)
-					throw new GraphQLError("Only the ticket creator can delete this ticket", { extensions: { status: 403, code: "FORBIDDEN" } })
+					throw new GraphQLError("Only the ticket creator can delete this ticket", { extensions: { http: { status: 403 }, code: "FORBIDDEN" } })
 
 				return ticketService.deleteTicket(args.id)
 			},
