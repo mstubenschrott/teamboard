@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "lint": "echo \"lint placeholder\"",
-    "build": "echo \"build placeholder\""
+    "build": "echo \"build placeholder\"",
+    "css": "sass styles/main.scss styles/main.css --no-source-map"
+  },
+  "devDependencies": {
+    "sass": "^1.105.0"
   }
 }
