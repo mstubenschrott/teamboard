@@ -4,7 +4,7 @@ import type { Ticket } from '../ticket'
 interface TicketCardProps {
   ticket: Ticket,
   className: string,
-  onAdvance: (id: number) => void,
+  onAdvance: (id: string) => void,
 }
 
 function TicketCard({ ticket, className, onAdvance }: TicketCardProps) {
@@ -14,12 +14,12 @@ function TicketCard({ ticket, className, onAdvance }: TicketCardProps) {
         <p className="card-text">{ticket.title}</p>
         {ticket.description && <p className="card-text">{ticket.description}</p>}
         <div className="d-flex justify-content-between align-items-center">
-          <small className="assignee">{ticket.assignee}</small>
+          <small className="assignee">{ticket.assignee ?? 'Unassigned'}</small>
           {ticket.status !== 'Done' && (
             <button
               type="button"
               className="btn btn-sm btn-outline-secondary"
-              onClick={() => onAdvance(ticket.id)}
+              onClick={() => onAdvance(ticket._id)}
               aria-label="Advance ticket"
             >
               &gt;

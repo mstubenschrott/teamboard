@@ -3,7 +3,9 @@ import './App.css'
 //import './styles/main.css'
 import Column from './components/Column'
 import LoginForm from './components/LoginForm'
-import { sampleTickets, type TicketStatus } from './ticket'
+import NewTicketForm from './components/NewTicketForm'
+import { createTicket, getTickets, updateTicket } from './api'
+import type { NewTicket, Ticket, TicketStatus } from './ticket'
 
 const nextStatus: Record<TicketStatus, TicketStatus> = {
   'To Do': 'In Progress',
@@ -12,15 +14,39 @@ const nextStatus: Record<TicketStatus, TicketStatus> = {
 }
 
 function App() {
-  const [tickets, setTickets] = useState(sampleTickets)
+  const [tickets, setTickets] = useState<Ticket[]>([])
   const [token, setToken] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  function advance(id: number) {
-    setTickets((tickets) =>
-      tickets.map((ticket) =>
-        ticket.id === id ? { ...ticket, status: nextStatus[ticket.status] } : ticket
-      )
-    )
+  async function loadTickets(authToken: string) {
+    try {
+      setTickets(await getTickets(authToken))
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load tickets')
+    }
+  }
+
+  function handleLogin(newToken: string) {
+    setToken(newToken)
+    loadTickets(newToken)
+  }
+
+  async function advance(id: string) {
+    const ticket = tickets.find((t) => t._id === id)
+    if (!token || !ticket) return
+    try {
+      const updated = await updateTicket(token, id, { status: nextStatus[ticket.status] })
+      setTickets((tickets) => tickets.map((ticket) => ticket._id === id ? updated : ticket))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not advance ticket')
+    }
+  }
+
+  async function addTicket(ticket: NewTicket) {
+    if (!token) return
+    await createTicket(token, ticket)
+    await loadTickets(token)
   }
 
   return (
@@ -31,7 +57,11 @@ function App() {
 
           {token
             ? <div className="alert alert-success">Logged in</div>
-            : <LoginForm onLogin={setToken} />}
+            : <LoginForm onLogin={handleLogin} />}
+
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {token && <NewTicketForm onAdd={addTicket} />}
 
           {token &&
             <div className="row g-3">

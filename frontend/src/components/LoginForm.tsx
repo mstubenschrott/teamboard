@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { login } from '../api'
 
 interface LoginFormProps {
   onLogin: (token: string) => void,
@@ -16,22 +17,11 @@ function LoginForm({ onLogin }: LoginFormProps) {
     setLoading(true)
 
     try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      })
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error ?? 'Login failed')
-        return
-      }
-
+      const token = await login(username, password)
       setPassword('')
-      onLogin(data.token)
-    } catch {
-      setError('Could not reach the server')
+      onLogin(token)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }

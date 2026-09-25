@@ -8,6 +8,7 @@ export default defineConfig({
     // The backend has no CORS headers, so proxy API calls through the dev server
     proxy: {
       '/auth': 'http://localhost:3000',
+      '/tickets': 'http://localhost:3000',
     },
   },
 })

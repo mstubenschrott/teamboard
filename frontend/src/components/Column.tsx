@@ -5,7 +5,7 @@ interface ColumnProps {
   status: TicketStatus,
   className: string,
   tickets: Ticket[],
-  onAdvance: (id: number) => void,
+  onAdvance: (id: string) => void,
 }
 
 function Column({ status, className, tickets, onAdvance }: ColumnProps) {
@@ -16,7 +16,7 @@ function Column({ status, className, tickets, onAdvance }: ColumnProps) {
         {tickets
           .filter((ticket) => ticket.status === status)
           .map((ticket) => (
-            <TicketCard key={ticket.id} ticket={ticket} className={className} onAdvance={onAdvance} />
+            <TicketCard key={ticket._id} ticket={ticket} className={className} onAdvance={onAdvance} />
           ))}
       </div>
     </div>
